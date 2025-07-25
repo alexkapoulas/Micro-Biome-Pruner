@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  dev:
+    build:
+      context: ./docker/dev
+      dockerfile: Dockerfile
+    container_name: micro-biome-dev
+    networks:
+      micro-biome-net:
+        ipv4_address: 172.20.0.10
+    ports:
+      - "25565:25565"  # Minecraft server port
+    volumes:
+      - micro-biome-source:/workspace
+      - micro-biome-gradle:/root/.gradle
+      - micro-biome-configs:/configs
+      - /var/run/docker.sock:/var/run/docker.sock  # Docker socket access
+    environment:
+      - GRADLE_OPTS=-Xmx2g
+      - JAVA_OPTS=-Xmx2g
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
+    command: ["bash"]
+    depends_on:
+      - test-runner
+
+  test-runner:
+    build:
+      context: ./docker/test-runner
+      dockerfile: Dockerfile
+    container_name: micro-biome-test-runner
+    networks:
+      micro-biome-net:
+        ipv4_address: 172.20.0.20
+    volumes:
+      - micro-biome-results:/results
+      - micro-biome-configs:/configs
+      - ./test-definitions:/tests:ro
+      - /var/run/docker.sock:/var/run/docker.sock  # Docker socket access for spawning test containers
+    environment:
+      - PYTHONPATH=/app
+      - DOCKER_NETWORK=micro-biome-net
+    working_dir: /tests
+    command: ["python", "-m", "pytest", "--verbose"]
+
+volumes:
+  micro-biome-source:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/src
+  
+  micro-biome-gradle:
+    driver: local
+    
+  micro-biome-results:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/test-results
+      
+  micro-biome-configs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/configs
+
+networks:
+  micro-biome-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1

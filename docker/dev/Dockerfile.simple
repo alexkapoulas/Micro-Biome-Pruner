@@ -1,0 +1,36 @@
+# Simplified development container for testing
+FROM openjdk:21-jdk
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV JAVA_HOME=/usr/local/openjdk-21
+ENV GRADLE_OPTS="-Xmx2g -Dorg.gradle.daemon=false"
+ENV JAVA_OPTS="-Xmx2g"
+
+# Install minimal system dependencies
+RUN microdnf update && microdnf install -y \
+    curl \
+    git \
+    && microdnf clean all
+
+# Install Node.js for Claude Code CLI
+RUN curl -fsSL https://nodejs.org/dist/v20.18.0/node-v20.18.0-linux-x64.tar.xz -o node.tar.xz \
+    && tar -xf node.tar.xz -C /usr/local --strip-components=1 \
+    && rm node.tar.xz
+
+# Install Claude Code CLI
+RUN npm install -g @anthropic-ai/claude-code
+
+# Create workspace and user
+WORKDIR /workspace
+RUN groupadd -g 1000 developer \
+    && useradd -u 1000 -g developer -m -s /bin/bash developer \
+    && chown -R developer:developer /workspace
+
+# Simple test script
+RUN echo '#!/bin/bash\necho "Testing development container..."\njava -version\nnode --version\nclaude-code --version || echo "Claude Code not available yet"' > /usr/local/bin/test-container.sh \
+    && chmod +x /usr/local/bin/test-container.sh
+
+USER developer
+EXPOSE 25565
+CMD ["/usr/local/bin/test-container.sh"]

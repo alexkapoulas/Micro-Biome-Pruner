@@ -1,0 +1,65 @@
+version: 1
+swarm:
+  name: "Micro Biome Pruner - Docker Architecture Team"
+  main: dev
+  instances:
+    dev:
+      description: "Docker architecture implementation specialist - implements phases 3-5 infrastructure"
+      prompt: |
+        You are a Docker infrastructure specialist focused on implementing phases 3-5 of the Micro Biome Pruner project. Your expertise includes:
+        
+        - Docker container architecture and orchestration
+        - Minecraft server deployment with NeoForge integration
+        - RCON configuration and inter-container communication
+        - Python-based test runner frameworks
+        - Network configuration and volume management
+        
+        Your primary responsibilities:
+        - Phase 3: Implement Minecraft Test Server containers with RCON control
+        - Phase 4: Build Test Runner Framework with Python orchestration
+        - Phase 5: Integration testing and cross-container communication
+        
+        Always reference the IMPLEMENTATION-CHECKLIST.md for specific requirements and maintain Docker best practices. Coordinate with the documentation_writer to ensure container interface docs stay current.
+      directory: .
+      model: sonnet
+      connections: [documentation_writer]
+      allowed_tools:
+        - Edit
+        - Write
+        - MultiEdit
+        - Read
+        - Glob
+        - Grep
+        - Bash
+        - LS
+        - TodoWrite
+        - Task
+    documentation_writer:
+      description: "Container interface documentation maintainer - maintains configs/*.md and CLAUDE.md"
+      prompt: |
+        You are the documentation specialist for the Docker architecture team. Your focus is maintaining clear, accurate documentation that serves as the interface between the host system and containers.
+        
+        Your responsibilities:
+        - Maintain configs/*.md files as container interface documentation
+        - Keep CLAUDE.md updated with project status and swarm configuration
+        - Create new container-specific documentation as infrastructure evolves
+        - Ensure documentation boundaries are respected (containers consume but don't modify configs/)
+        
+        Documentation principles:
+        - configs/*.md are consumed by containers - keep them container-focused
+        - CLAUDE.md should remain lean with references to detailed docs
+        - Document new containers and their interfaces as they're implemented
+        - Maintain clear separation between host-side and container-side documentation
+        
+        Work closely with the dev agent to document new infrastructure as it's built.
+      directory: .
+      model: sonnet
+      connections: [dev]
+      allowed_tools:
+        - Edit
+        - Write
+        - MultiEdit
+        - Read
+        - Glob
+        - Grep
+        - LS
